@@ -1,102 +1,87 @@
-# Kubernetes Deploy
+# Agentv2 Kubernetes Deploy
 
-This directory contains Kubernetes manifests for the Botmother Go engine.
+This directory deploys the Python Botmother Flow Agent API as a separate `agentv2` workload in the existing `botmother` namespace. It does not replace the existing production `botmother-agent` Deployment.
 
-## Files
+## CI/CD Flow
 
-- `base/` contains the reusable deployment, service, ingress, Redis, config, and flow ConfigMap.
-- `base/secret.example.yaml` is a template only. Copy it and fill real values locally.
-- `overlays/local/` is a local Kustomize overlay with the default image name, local host, and a placeholder flow.
+On every push to `main`, `.github/workflows/deploy.yml`:
 
-## Build Image
+1. Builds the Docker image.
+2. Pushes it to `registry.iprogrammer.uz/agentv2/botmother-agent:prod-<short-sha>`.
+3. Updates `k8s/chart/agentv2/values-prod.yaml` with the new tag.
+4. Commits the tag update back to `main` with `[skip ci]`.
+5. Argo CD renders the Helm chart at `k8s/chart/agentv2` with `values-prod.yaml` and syncs it into the `botmother` namespace.
 
-```bash
-docker build -t botmother-engine-go:latest .
-```
+## One-Time Setup
 
-For `kind`:
+Add these GitHub repository secrets:
 
-```bash
-kind load docker-image botmother-engine-go:latest
-```
+- `HARBOR_USERNAME`
+- `HARBOR_PASSWORD`
 
-For a remote cluster, tag and push the image, then update `agent/k8s/overlays/local/kustomization.yaml`.
-
-## Create Secret
+Create the Harbor image pull secret in the cluster:
 
 ```bash
-cp agent/k8s/base/secret.example.yaml /tmp/botmother-engine-secret.yaml
+kubectl -n botmother create secret docker-registry agentv2-harbor-registry \
+  --docker-server=registry.iprogrammer.uz \
+  --docker-username=admin \
+  --docker-password='<secret>'
 ```
 
-Edit `/tmp/botmother-engine-secret.yaml`, then apply it:
+Create the runtime secret from the example and fill real values:
 
 ```bash
-kubectl apply -f agent/k8s/base/namespace.yaml
-kubectl apply -f /tmp/botmother-engine-secret.yaml
+cp k8s/chart/agentv2/examples/agentv2-secret.example.yaml /tmp/agentv2-secret.yaml
+kubectl -n botmother apply -f /tmp/agentv2-secret.yaml
 ```
 
-Required values:
+Common runtime values:
 
-- `BOT_TOKEN` or `RELEASE_BOT_TOKEN`
-- `PROJECT_ID` if resource monitoring or external webhook URLs are used
-- `MONGO_ADDR` and `MONGO_DB_NAME` if collection nodes are used
-- `PLUGIN_API_KEY` if the plugin service requires auth
+- `AGENT_JWT_PUBLIC_KEY` and `AGENT_JWT_ALGORITHMS` for bearer-token validation.
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_REGION` when using Bedrock.
+- `OLLAMA_HOST` only if `IS_OLLAMA=true`.
 
-## Deploy
+Apply the Argo CD Application after Argo CD is healthy:
 
 ```bash
-kubectl apply -k agent/k8s/overlays/local
+kubectl apply -f k8s/argocd/agentv2-application.yaml
 ```
 
-Check status:
+Argo CD must also have Git access to `git@github.com:BotSpace/agentv2.git`.
+
+Note: the current cluster inspection showed no Argo Applications and an unavailable `argocd-repo-server`. Fix Argo CD health before relying on automatic sync.
+
+## Local Checks
+
+Render manifests:
 
 ```bash
-kubectl -n botmother-engine get pods
-kubectl -n botmother-engine logs deploy/botmother-engine -f
+helm template agentv2 k8s/chart/agentv2 -f k8s/chart/agentv2/values-prod.yaml --namespace botmother
 ```
 
-Port-forward locally:
+Build image:
 
 ```bash
-kubectl -n botmother-engine port-forward svc/botmother-engine 8443:8443 9090:9090
+docker build -t registry.iprogrammer.uz/agentv2/botmother-agent:test .
 ```
 
-Health check:
+Smoke test:
 
 ```bash
-curl http://127.0.0.1:9090/health
+docker run --rm -p 18000:8000 registry.iprogrammer.uz/agentv2/botmother-agent:test
+curl http://127.0.0.1:18000/health
 ```
 
-Metrics:
+## Post-Deploy Verification
 
 ```bash
-curl http://127.0.0.1:9090/metrics
+kubectl -n botmother get deploy,svc,ingress agentv2
+kubectl -n botmother rollout status deploy/agentv2
+kubectl -n botmother get pods -l app.kubernetes.io/name=agentv2
+curl https://api.botmother.uz/api/agentv2/health
+kubectl -n argocd get application agentv2
 ```
 
-## Flow Updates
+## Storage
 
-The flow is mounted from the `botmother-flow` ConfigMap at `/app/assets/flow.json`.
-The local overlay starts with a placeholder flow so plain `kubectl apply -k` works everywhere.
-Replace it with the project flow after deploy:
-
-```bash
-kubectl -n botmother-engine create configmap botmother-flow \
-  --from-file=flow.json=assets/flow.json \
-  --dry-run=client -o yaml | kubectl apply -f -
-kubectl -n botmother-engine rollout restart deploy/botmother-engine
-```
-
-## Webhooks
-
-The engine exposes:
-
-- `8443` for Telegram webhook mode and `/custom-webhook/...`
-- `9090` for `/health` and `/metrics`
-
-Set these env vars when using Telegram webhook mode:
-
-- `WEBHOOK_ENABLED=true`
-- `WEBHOOK_URL=https://your-domain.example`
-- `WEBHOOK_PORT=8443`
-
-Set `EXTERNAL_WEBHOOK_BASE_URL` when custom code needs generated external webhook URLs.
+The API stores SQLite state and the editable flow at `/app/data` on the `agentv2-data` PVC. Redis is deployed as `agentv2-redis` for event fan-out.

@@ -124,6 +124,10 @@ def create_app(
     app.state.run_store = store
     app.state.agent_checkpointer = checkpointer
 
+    @app.get("/health")
+    async def health() -> dict[str, str]:
+        return {"status": "ok"}
+
     @app.post("/projects/{project_id}/runs", response_model=RunCreateResponse)
     async def create_run(
         project_id: str,

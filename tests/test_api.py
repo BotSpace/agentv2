@@ -130,6 +130,23 @@ def test_api_run_streams_tool_and_flow_change_events(tmp_path: Path) -> None:
     assert edge_event["payload"]["edge"]["target"] == "welcome"
 
 
+def test_api_health_endpoint(tmp_path: Path) -> None:
+    app = create_app(
+        workspace_root=tmp_path,
+        default_flow=str(write_start_flow(tmp_path)),
+        model_name="fake",
+        database_url=f"sqlite:///{tmp_path / 'agent.db'}",
+        redis_url="",
+        model_factory=lambda _name: FakeModel([]),
+    )
+    client = TestClient(app)
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
 def test_api_connect_steps_bulk_emits_one_event_per_edge(tmp_path: Path) -> None:
     flow_path = write_start_flow(tmp_path)
     app = create_app(
