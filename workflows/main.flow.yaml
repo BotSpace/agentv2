@@ -1,0 +1,576 @@
+flow:
+  meta:
+    name: OquvMarkazCRM
+    description: O'quv markaz uchun Telegram CRM bot
+    version: 1
+    tags: []
+  triggers:
+  - id: start_trigger
+    kind: command_trigger
+    command: /start
+    buttons: []
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  - id: courses_trigger
+    kind: command_trigger
+    command: /courses
+    buttons: []
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  - id: price_trigger
+    kind: command_trigger
+    command: /price
+    buttons: []
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  - id: schedule_trigger
+    kind: command_trigger
+    command: /schedule
+    buttons: []
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  - id: register_trigger
+    kind: command_trigger
+    command: /register
+    buttons: []
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  - id: myinfo_trigger
+    kind: command_trigger
+    command: /myinfo
+    buttons: []
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  - id: contact_trigger
+    kind: command_trigger
+    command: /contact
+    buttons: []
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  - id: about_trigger
+    kind: command_trigger
+    command: /about
+    buttons: []
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  - id: admin_trigger
+    kind: command_trigger
+    command: /admin
+    buttons: []
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  steps:
+  - id: start_message
+    kind: send_text
+    buttons: []
+    text: 'Assalomu alaykum! 👋
+
+
+      🏫 O''quv Markaz CRM tizimiga xush kelibsiz!
+
+
+      📋 Mavjud buyruqlar:
+
+
+      📚 /courses - Kurslar haqida ma''lumot
+
+      💰 /price - Kurs narxlari
+
+      📅 /schedule - Dars jadvali
+
+      📝 /register - Ro''yxatdan o''tish
+
+      👤 /myinfo - Mening ma''lumotlarim
+
+      📞 /contact - Aloqa ma''lumotlari
+
+      ℹ️ /about - Markaz haqida
+
+      🔐 /admin - Admin panel'
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  - id: courses_message
+    kind: send_text
+    buttons: []
+    text: "\U0001F4DA BIZNING KURSLAR:\n\n1️⃣ Ingliz tili\n   - Beginner, Intermediate,\
+      \ Advanced\n   - IELTS, TOEFL tayyorlov\n   - Speaking Club\n\n2️⃣ Matematika\n\
+      \   - Maktab dasturi (5-11 sinf)\n   - OTMga kirish tayyorlov\n   - DTM mashqlari\n\
+      \n3️⃣ Dasturlash\n   - Python dasturlash\n   - JavaScript & Web\n   - Mobile\
+      \ dasturlash\n   - Frontend/Backend\n\n4️⃣ Rus tili\n   - Boshlang'ich daraja\n\
+      \   - O'rta va yuqori daraja\n   - Biznes rus tili\n\n5️⃣ Koreys tili\n   -\
+      \ Boshlang'ich daraja\n   - TOPIK tayyorlov (1-6)\n   - Koreyada o'qish\n\n\
+      6️⃣ Nemis tili\n   - A1-C1 darajalar\n   - IELTS tayyorlov\n\nBatafsil ma'lumot\
+      \ uchun:\n/price - Narxlar\n/register - Ro'yxatdan o'tish"
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  - id: price_message
+    kind: send_text
+    buttons: []
+    text: "\U0001F4B0 KURSLAR NARXLARI (2024):\n\n\U0001F1EC\U0001F1E7 Ingliz tili:\n\
+      \   • Guruhda: 250,000 so'm/oy\n   • Individual: 500,000 so'm/oy\n   • IELTS:\
+      \ 400,000 so'm/oy\n\n\U0001F4D0 Matematika:\n   • Guruhda: 200,000 so'm/oy\n\
+      \   • Individual: 400,000 so'm/oy\n   • OTM tayyorlov: 300,000 so'm/oy\n\n\U0001F4BB\
+      \ Dasturlash:\n   • Python: 400,000 so'm/oy\n   • Web dasturlash: 450,000 so'm/oy\n\
+      \   • Mobile: 500,000 so'm/oy\n\n\U0001F1F7\U0001F1FA Rus tili:\n   • Guruhda:\
+      \ 200,000 so'm/oy\n   • Individual: 400,000 so'm/oy\n\n\U0001F1F0\U0001F1F7\
+      \ Koreys tili:\n   • Guruhda: 300,000 so'm/oy\n   • TOPIK: 350,000 so'm/oy\n\
+      \n\U0001F1E9\U0001F1EA Nemis tili:\n   • Guruhda: 250,000 so'm/oy\n\n⚠️ Narxlar\
+      \ o'zgarishi mumkin.\nAniq ma'lumot uchun: /contact"
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  - id: schedule_message
+    kind: send_text
+    buttons: []
+    text: '📅 DARS JADVALI:
+
+
+      Dushanba - Juma:
+
+      🌅 Ertalab: 08:00 - 12:00
+
+      🌞 Kunduzi: 13:00 - 17:00
+
+      🌙 Kechqurun: 18:00 - 21:00
+
+
+      Shanba:
+
+      🌞 Kunduzi: 09:00 - 17:00
+
+
+      Yakshanba:
+
+      ❌ Dam olish kuni
+
+
+      📝 Guruhlar:
+
+      • Ertalabki guruh (08:00-10:00)
+
+      • Kunduzgi guruh (14:00-16:00)
+
+      • Kechki guruh (18:00-20:00)
+
+      • Hafta oxiri (shanba 10:00-16:00)
+
+
+      ✅ Har bir talaba uchun mos jadval tanlanadi.
+
+
+      Ro''yxatdan o''tish: /register'
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  - id: register_message
+    kind: send_text
+    buttons: []
+    text: '📝 RO''YXATDAN O''TISH
+
+
+      Iltimos, quyidagi ma''lumotlarni tayyorlang:
+
+
+      1. To''liq ismingiz
+
+      2. Telefon raqamingiz
+
+      3. Tanlamoqchi bo''lgan kursingiz
+
+      4. Qulay vaqt (ertalab/kunduzi/kechki)
+
+
+      Keyingi bosqichda operator siz bilan bog''lanadi.
+
+
+      Davom etish uchun /start bosing va "Ro''yxatdan o''tish" tugmasini tanlang.'
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  - id: myinfo_message
+    kind: send_text
+    buttons: []
+    text: '👤 MENING MA''LUMOTLARIM
+
+
+      Bu bo''limda siz:
+
+      • Shaxsiy ma''lumotlaringizni ko''rasiz
+
+      • Kurs ma''lumotlarini ko''rasiz
+
+      • To''lov tarixini ko''rasiz
+
+      • Dars jadvalingizni ko''rasiz
+
+
+      Ro''yxatdan o''tmagan bo''lsangiz:
+
+      /register - Ro''yxatdan o''ting'
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  - id: contact_message
+    kind: send_text
+    buttons: []
+    text: '📞 ALOQA MA''LUMOTLARI:
+
+
+      🏢 Manzil:
+
+      Toshkent shahri, Chilonzor tumani
+
+      15-mavze, 12-uy
+
+
+      📱 Telefon:
+
+      +998 90 123 45 67
+
+      +998 97 765 43 21
+
+
+      📧 Email:
+
+      info@oquvmarkaz.uz
+
+      admin@oquvmarkaz.uz
+
+
+      🌐 Ijtimoiy tarmoqlar:
+
+      Telegram: @oquvmarkaz
+
+      Instagram: @oquvmarkaz_uz
+
+      Facebook: O''quv Markaz
+
+      YouTube: O''quv Markaz TV
+
+
+      🕐 Ish vaqti:
+
+      Dushanba - Shanba: 08:00 - 20:00
+
+      Yakshanba: Dam olish
+
+
+      Keling, tanishamiz! 😊'
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  - id: about_message
+    kind: send_text
+    buttons: []
+    text: 'ℹ️ MARKAZ HAQIDA:
+
+
+      🏆 Bizning o''quv markaz 2015-yildan beri faoliyat yuritib kelmoqda.
+
+
+      📊 Natijalarimiz:
+
+      • 5000+ muvaffaqiyatli bitiruvchi
+
+      • 20+ tajribali o''qituvchi
+
+      • 95% muvaffaqiyat darajasi
+
+      • 98% talabalar memnunligi
+
+
+      ✅ Afzalliklarimiz:
+
+      • Individual yondashuv
+
+      • Zamonaviy o''quv usullari
+
+      • Moslashuvchan jadval
+
+      • Qulay narxlar va to''lov tizimi
+
+      • Davlat sertifikati
+
+      • Bepul sinov darslari
+
+      • Kitob va o''quv materiallari
+
+      • Online va offline darslar
+
+
+      🎯 Bizning maqsad:
+
+      Har bir talabaga sifatli ta''lim berish va ularni kelajakdagi muvaffaqiyatga
+      olib borish!
+
+
+      Biz bilan birga kelajagingizni quring! 🚀'
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  - id: admin_message
+    kind: send_text
+    buttons: []
+    text: '🔐 ADMIN PANEL
+
+
+      Admin funksiyalari:
+
+
+      👥 Talabalar:
+
+      • /students - Talabalar ro''yxati
+
+      • /addstudent - Yangi talaba qo''shish
+
+      • /searchstudent - Talaba qidirish
+
+
+      💰 Moliya:
+
+      • /payments - To''lovlar tarixi
+
+      • /debts - Qarzlar
+
+      • /income - Daromad
+
+
+      📊 Statistika:
+
+      • /stats - Umumiy statistika
+
+      • /reports - Hisobotlar
+
+
+      ⚙️ Sozlamalar:
+
+      • /teachers - O''qituvchilar
+
+      • /groups - Guruhlar
+
+      • /settings - Tizim sozlamalari
+
+
+      ⚠️ Bu bo''lim faqat adminlar uchun!'
+    dynamic_messages: []
+    filters: []
+    conditions: []
+    branches: []
+    selected_callbacks: []
+    selected_buttons: []
+    target_chat_ids: []
+    options: []
+    media_items: []
+    results: []
+    channels: []
+    data: {}
+    routes: []
+  routes:
+  - from: start_trigger
+    to: start_message
+    'on': 'true'
+  - from: courses_trigger
+    to: courses_message
+    'on': 'true'
+  - from: price_trigger
+    to: price_message
+    'on': 'true'
+  - from: schedule_trigger
+    to: schedule_message
+    'on': 'true'
+  - from: register_trigger
+    to: register_message
+    'on': 'true'
+  - from: myinfo_trigger
+    to: myinfo_message
+    'on': 'true'
+  - from: contact_trigger
+    to: contact_message
+    'on': 'true'
+  - from: about_trigger
+    to: about_message
+    'on': 'true'
+  - from: admin_trigger
+    to: admin_message
+    'on': 'true'

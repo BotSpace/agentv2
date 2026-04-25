@@ -1,0 +1,193 @@
+{
+  "subflows": [
+    {
+      "slug": "appointment_booking_form",
+      "file": "appointment_booking_form.json",
+      "title": "Appointment booking form",
+      "description": "Custom-code multi-step booking request for clinics, salons, consultants, and service businesses.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "bug_report_form",
+      "file": "bug_report_form.json",
+      "title": "Bug report form",
+      "description": "Custom-code product bug report flow with platform, summary, repro steps, and expected result.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "callback_request_form",
+      "file": "callback_request_form.json",
+      "title": "Callback request form",
+      "description": "Custom-code callback request flow with name, phone, preferred time, and note.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "complaint_form",
+      "file": "complaint_form.json",
+      "title": "Complaint form",
+      "description": "Custom-code complaint intake with topic, details, and optional reference.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "consultation_request_form",
+      "file": "consultation_request_form.json",
+      "title": "Consultation request form",
+      "description": "Custom-code consultation request flow with topic, format, and contact number.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "confirm_yes_no",
+      "file": "confirm_yes_no.json",
+      "title": "Yes/No confirmation",
+      "description": "Simple confirmation prompt with direct yes/no outputs.",
+      "outputs": ["yes", "no"]
+    },
+    {
+      "slug": "delivery_request_form",
+      "file": "delivery_request_form.json",
+      "title": "Delivery request form",
+      "description": "Custom-code delivery request flow with address, time, and contact details.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "demo_request_form",
+      "file": "demo_request_form.json",
+      "title": "Demo request form",
+      "description": "Custom-code product demo request form for B2B and SaaS use cases.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "event_registration_form",
+      "file": "event_registration_form.json",
+      "title": "Event registration form",
+      "description": "Custom-code event registration with guest count, phone, and note.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "feedback_form",
+      "file": "feedback_form.json",
+      "title": "Feedback form",
+      "description": "Collects rating and free-text feedback, then exits as completed or cancelled.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "job_application_form",
+      "file": "job_application_form.json",
+      "title": "Job application form",
+      "description": "Custom-code multi-step vacancy application with role, experience, phone, and portfolio/CV.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "lead_capture_basic",
+      "file": "lead_capture_basic.json",
+      "title": "Lead capture",
+      "description": "Collects name and phone, confirms, then exits as completed or cancelled.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "maintenance_request_form",
+      "file": "maintenance_request_form.json",
+      "title": "Maintenance request form",
+      "description": "Custom-code maintenance/service request for equipment, facilities, or field service teams.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "multi_step_register_form",
+      "file": "multi_step_register_form.json",
+      "title": "Multi-step register form",
+      "description": "Custom-code multi-step registration form for courses, events, memberships, and service onboarding.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "newsletter_signup_form",
+      "file": "newsletter_signup_form.json",
+      "title": "Newsletter signup form",
+      "description": "Custom-code subscriber signup flow with topics of interest.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "order_request_form",
+      "file": "order_request_form.json",
+      "title": "Order request form",
+      "description": "Custom-code order request flow with product, quantity, address, and phone.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "partner_application_form",
+      "file": "partner_application_form.json",
+      "title": "Partner application form",
+      "description": "Custom-code partnership application for agencies, resellers, and media partners.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "phone_capture",
+      "file": "phone_capture.json",
+      "title": "Phone capture",
+      "description": "Collects a phone number and exits as completed or cancelled.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "promo_claim_form",
+      "file": "promo_claim_form.json",
+      "title": "Promo claim form",
+      "description": "Custom-code promo claim flow with promo code and contact capture.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "quote_request_form",
+      "file": "quote_request_form.json",
+      "title": "Quote request form",
+      "description": "Custom-code multi-step commercial request form with need, budget, timeline, and contact info.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "reservation_request_form",
+      "file": "reservation_request_form.json",
+      "title": "Reservation request form",
+      "description": "Custom-code reservation flow for tables, seats, showrooms, and visits.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "supplier_request_form",
+      "file": "supplier_request_form.json",
+      "title": "Supplier request form",
+      "description": "Custom-code supplier onboarding/request flow with category, offer, and phone.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "survey_quick_form",
+      "file": "survey_quick_form.json",
+      "title": "Quick survey form",
+      "description": "Custom-code short survey flow with three open-ended questions.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "text_input_capture",
+      "file": "text_input_capture.json",
+      "title": "Text input capture",
+      "description": "Collects a generic text input, confirms receipt, then exits as completed or cancelled.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "contact_request",
+      "file": "contact_request.json",
+      "title": "Contact request",
+      "description": "Requests a Telegram contact share, captures the phone number, then exits as completed.",
+      "outputs": ["completed"]
+    },
+    {
+      "slug": "support_ticket_form",
+      "file": "support_ticket_form.json",
+      "title": "Support ticket form",
+      "description": "Collects issue topic and description, then exits as completed or cancelled.",
+      "outputs": ["completed", "cancelled"]
+    },
+    {
+      "slug": "warranty_claim_form",
+      "file": "warranty_claim_form.json",
+      "title": "Warranty claim form",
+      "description": "Custom-code warranty request flow with product, issue, and contact capture.",
+      "outputs": ["completed", "cancelled"]
+    }
+  ]
+}

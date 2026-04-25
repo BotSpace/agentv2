@@ -1,0 +1,172 @@
+{
+  "nodes": [
+    {
+      "id": "ask_name",
+      "type": "SendTextMessageNode",
+      "data": {
+        "messageText": "Iltimos, ismingizni kiriting:",
+        "parseMode": "HTML"
+      },
+      "position": {
+        "x": 0,
+        "y": 240
+      },
+      "width": 360,
+      "height": 180
+    },
+    {
+      "id": "capture_name",
+      "type": "MessageTriggerNode",
+      "data": {
+        "type": "text",
+        "filter": "any",
+        "context": {
+          "value": ""
+        },
+        "state": {
+          "key": "lead_name",
+          "type": "text"
+        }
+      },
+      "position": {
+        "x": 460,
+        "y": 240
+      },
+      "width": 320,
+      "height": 320
+    },
+    {
+      "id": "ask_phone",
+      "type": "SendTextMessageNode",
+      "data": {
+        "messageText": "Rahmat, {{state_lead_name}}.\nEndi telefon raqamingizni kiriting:",
+        "parseMode": "HTML"
+      },
+      "position": {
+        "x": 920,
+        "y": 240
+      },
+      "width": 380,
+      "height": 180
+    },
+    {
+      "id": "capture_phone",
+      "type": "MessageTriggerNode",
+      "data": {
+        "type": "text",
+        "filter": "any",
+        "context": {
+          "value": ""
+        },
+        "state": {
+          "key": "lead_phone",
+          "type": "text"
+        }
+      },
+      "position": {
+        "x": 1380,
+        "y": 240
+      },
+      "width": 320,
+      "height": 320
+    },
+    {
+      "id": "confirm_lead",
+      "type": "SendTextMessageNode",
+      "data": {
+        "messageText": "Quyidagi ma'lumotlar to'g'rimi?\n\n👤 Ism: {{state_lead_name}}\n📞 Telefon: {{state_lead_phone}}",
+        "parseMode": "HTML",
+        "keyboard": {
+          "active": "inline",
+          "inline": [
+            [
+              {
+                "text": "✅ Tasdiqlash",
+                "type": "callback",
+                "value": "confirm_lead"
+              },
+              {
+                "text": "❌ Bekor qilish",
+                "type": "callback",
+                "value": "cancel_lead"
+              }
+            ]
+          ],
+          "reply": []
+        }
+      },
+      "position": {
+        "x": 1840,
+        "y": 200
+      },
+      "width": 420,
+      "height": 260
+    },
+    {
+      "id": "exit_completed",
+      "type": "SubFlowExitNode",
+      "data": {
+        "output": "completed"
+      },
+      "position": {
+        "x": 2420,
+        "y": 120
+      },
+      "width": 220,
+      "height": 120
+    },
+    {
+      "id": "exit_cancelled",
+      "type": "SubFlowExitNode",
+      "data": {
+        "output": "cancelled"
+      },
+      "position": {
+        "x": 2420,
+        "y": 300
+      },
+      "width": 220,
+      "height": 120
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge__ask_name__capture_name__default__default",
+      "source": "ask_name",
+      "target": "capture_name",
+      "type": "floating"
+    },
+    {
+      "id": "edge__capture_name__ask_phone__default__default",
+      "source": "capture_name",
+      "target": "ask_phone",
+      "type": "floating"
+    },
+    {
+      "id": "edge__ask_phone__capture_phone__default__default",
+      "source": "ask_phone",
+      "target": "capture_phone",
+      "type": "floating"
+    },
+    {
+      "id": "edge__capture_phone__confirm_lead__default__default",
+      "source": "capture_phone",
+      "target": "confirm_lead",
+      "type": "floating"
+    },
+    {
+      "id": "edge__confirm_lead__exit_completed__target-handler-confirm_lead-✅_Tasdiqlash__default",
+      "source": "confirm_lead",
+      "target": "exit_completed",
+      "type": "floating",
+      "sourceHandle": "target-handler-confirm_lead-✅ Tasdiqlash"
+    },
+    {
+      "id": "edge__confirm_lead__exit_cancelled__target-handler-confirm_lead-❌_Bekor_qilish__default",
+      "source": "confirm_lead",
+      "target": "exit_cancelled",
+      "type": "floating",
+      "sourceHandle": "target-handler-confirm_lead-❌ Bekor qilish"
+    }
+  ]
+}

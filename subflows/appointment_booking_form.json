@@ -1,0 +1,59 @@
+{
+  "nodes": [
+    {
+      "id": "booking_flow",
+      "type": "CustomCodeNode",
+      "data": {
+        "jsCode": "function getText() {\n  if (message && message.contact && message.contact.phone_number) {\n    return String(message.contact.phone_number);\n  }\n  if (message && message.text) {\n    return String(message.text).trim();\n  }\n  return \"\";\n}\n\nfunction cleanupInternal() {\n  delete_context(\"_booking_step\");\n}\n\nfunction ask(prompt) {\n  send_message({ text: prompt, parse_mode: \"HTML\" });\n}\n\nvar steps = [\n  {\n    key: \"booking_name\",\n    prompt: get_context(\"param_name_prompt\") || \"Bron qilish uchun ism va familiyangizni kiriting:\",\n    error: \"Iltimos, to'liq ism kiriting.\",\n    validate: function(value) { return value.length >= 3; }\n  },\n  {\n    key: \"booking_service\",\n    prompt: get_context(\"param_service_prompt\") || \"Qaysi xizmat, mutaxassis yoki yo'nalishga yozilmoqchisiz?\",\n    error: \"Xizmat nomini kiriting.\",\n    validate: function(value) { return value.length >= 2; }\n  },\n  {\n    key: \"booking_date\",\n    prompt: get_context(\"param_date_prompt\") || \"Qulay sana va vaqtni yozing. Masalan: 25-aprel, 18:00\",\n    error: \"Iltimos, sana yoki vaqtni kiriting.\",\n    validate: function(value) { return value.length >= 3; }\n  },\n  {\n    key: \"booking_phone\",\n    prompt: get_context(\"param_phone_prompt\") || \"Bog'lanish uchun telefon raqamingizni yuboring:\",\n    error: \"Telefon raqamini +998901234567 formatida kiriting yoki kontakt yuboring.\",\n    validate: function(value) {\n      var cleaned = value.replace(/[^\\d+]/g, \"\");\n      return /^\\+?\\d{9,15}$/.test(cleaned);\n    },\n    normalize: function(value) {\n      var cleaned = value.replace(/[^\\d+]/g, \"\");\n      if (cleaned[0] !== \"+\") return \"+\" + cleaned;\n      return cleaned;\n    }\n  },\n  {\n    key: \"booking_comment\",\n    prompt: get_context(\"param_comment_prompt\") || \"Qo'shimcha izoh bo'lsa yozing. Bo'lmasa '-' deb yuboring.\",\n    error: \"Javobni qayta yuboring.\",\n    validate: function(value) { return value.length >= 1; },\n    normalize: function(value) {\n      if (value === \"-\") return \"\";\n      return value;\n    }\n  }\n];\n\nvar step = parseInt(get_context(\"_booking_step\") || \"0\", 10);\nvar answer = getText();\n\nif (answer.toLowerCase() === \"/cancel\") {\n  cleanupInternal();\n  exit(\"cancelled\");\n}\n\nif (step > 0) {\n  var previous = steps[step - 1];\n  var value = answer;\n  if (previous.normalize) value = previous.normalize(value);\n  if (!previous.validate(value)) {\n    ask(previous.error + \"\\n\\nBekor qilish uchun /cancel yuboring.\");\n    wait_for_input();\n  }\n  set_context(previous.key, value);\n}\n\nif (step >= steps.length) {\n  var successMessage = get_context(\"param_success_message\") || (\n    \"<b>Bron so'rovi qabul qilindi.</b>\\n\\n\" +\n    \"👤 Mijoz: \" + (get_context(\"booking_name\") || \"\") + \"\\n\" +\n    \"🧩 Xizmat: \" + (get_context(\"booking_service\") || \"\") + \"\\n\" +\n    \"📅 Vaqt: \" + (get_context(\"booking_date\") || \"\") + \"\\n\" +\n    \"📞 Telefon: \" + (get_context(\"booking_phone\") || \"\") + \"\\n\" +\n    \"📝 Izoh: \" + (get_context(\"booking_comment\") || \"-\")\n  );\n  send_message({ text: successMessage, parse_mode: \"HTML\" });\n  cleanupInternal();\n  exit(\"completed\");\n}\n\nask(steps[step].prompt + \"\\n\\nBekor qilish uchun /cancel yuboring.\");\nset_context(\"_booking_step\", String(step + 1));\nwait_for_input();"
+      },
+      "position": {
+        "x": 0,
+        "y": 180
+      },
+      "width": 520,
+      "height": 420
+    },
+    {
+      "id": "exit_completed",
+      "type": "SubFlowExitNode",
+      "data": {
+        "output": "completed"
+      },
+      "position": {
+        "x": 720,
+        "y": 120
+      },
+      "width": 220,
+      "height": 120
+    },
+    {
+      "id": "exit_cancelled",
+      "type": "SubFlowExitNode",
+      "data": {
+        "output": "cancelled"
+      },
+      "position": {
+        "x": 720,
+        "y": 300
+      },
+      "width": 220,
+      "height": 120
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge__booking_flow__exit_completed__output-completed__default",
+      "source": "booking_flow",
+      "target": "exit_completed",
+      "type": "floating",
+      "sourceHandle": "output-completed"
+    },
+    {
+      "id": "edge__booking_flow__exit_cancelled__output-cancelled__default",
+      "source": "booking_flow",
+      "target": "exit_cancelled",
+      "type": "floating",
+      "sourceHandle": "output-cancelled"
+    }
+  ]
+}

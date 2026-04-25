@@ -1,0 +1,98 @@
+{
+  "nodes": [
+    {
+      "id": "ask_contact",
+      "type": "SendTextMessageNode",
+      "data": {
+        "messageText": "Iltimos, telefon raqamingizni contact sifatida yuboring.",
+        "parseMode": "HTML",
+        "keyboard": {
+          "active": "reply",
+          "inline": [],
+          "reply": [
+            [
+              {
+                "text": "📱 Telefon raqamni yuborish",
+                "type": "request_contact"
+              }
+            ]
+          ]
+        }
+      },
+      "position": {
+        "x": 0,
+        "y": 240
+      },
+      "width": 400,
+      "height": 240
+    },
+    {
+      "id": "capture_contact",
+      "type": "MessageTriggerNode",
+      "data": {
+        "type": "contact",
+        "filter": "any",
+        "context": {
+          "value": ""
+        },
+        "state": {
+          "key": "contact_phone",
+          "type": "phone_number"
+        }
+      },
+      "position": {
+        "x": 520,
+        "y": 240
+      },
+      "width": 320,
+      "height": 320
+    },
+    {
+      "id": "contact_saved_message",
+      "type": "SendTextMessageNode",
+      "data": {
+        "messageText": "Rahmat. Contact qabul qilindi: {{state_contact_phone}}",
+        "parseMode": "HTML"
+      },
+      "position": {
+        "x": 1000,
+        "y": 240
+      },
+      "width": 360,
+      "height": 180
+    },
+    {
+      "id": "exit_completed",
+      "type": "SubFlowExitNode",
+      "data": {
+        "output": "completed"
+      },
+      "position": {
+        "x": 1480,
+        "y": 240
+      },
+      "width": 220,
+      "height": 120
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge__ask_contact__capture_contact__default__default",
+      "source": "ask_contact",
+      "target": "capture_contact",
+      "type": "floating"
+    },
+    {
+      "id": "edge__capture_contact__contact_saved_message__default__default",
+      "source": "capture_contact",
+      "target": "contact_saved_message",
+      "type": "floating"
+    },
+    {
+      "id": "edge__contact_saved_message__exit_completed__default__default",
+      "source": "contact_saved_message",
+      "target": "exit_completed",
+      "type": "floating"
+    }
+  ]
+}

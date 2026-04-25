@@ -1,0 +1,221 @@
+{
+  "nodes": [
+    {
+      "id": "ask_rating",
+      "type": "SendTextMessageNode",
+      "data": {
+        "messageText": "Xizmatimizni 1 dan 5 gacha baholang:",
+        "parseMode": "HTML",
+        "keyboard": {
+          "active": "inline",
+          "inline": [
+            [
+              {
+                "text": "1",
+                "type": "callback",
+                "value": "1"
+              },
+              {
+                "text": "2",
+                "type": "callback",
+                "value": "2"
+              },
+              {
+                "text": "3",
+                "type": "callback",
+                "value": "3"
+              },
+              {
+                "text": "4",
+                "type": "callback",
+                "value": "4"
+              },
+              {
+                "text": "5",
+                "type": "callback",
+                "value": "5"
+              }
+            ],
+            [
+              {
+                "text": "❌ Bekor qilish",
+                "type": "callback",
+                "value": "cancel_feedback"
+              }
+            ]
+          ],
+          "reply": []
+        }
+      },
+      "position": {
+        "x": 0,
+        "y": 260
+      },
+      "width": 420,
+      "height": 340
+    },
+    {
+      "id": "capture_rating",
+      "type": "CallbackQueryTriggerNode",
+      "data": {
+        "filter": "any",
+        "context": {
+          "value": ""
+        },
+        "state": {
+          "key": "feedback_rating",
+          "type": "callback"
+        }
+      },
+      "position": {
+        "x": 540,
+        "y": 220
+      },
+      "width": 320,
+      "height": 320
+    },
+    {
+      "id": "ask_feedback_text",
+      "type": "SendTextMessageNode",
+      "data": {
+        "messageText": "Rahmat. Endi qisqa izoh yoki fikringizni yozing:",
+        "parseMode": "HTML"
+      },
+      "position": {
+        "x": 1000,
+        "y": 220
+      },
+      "width": 380,
+      "height": 180
+    },
+    {
+      "id": "capture_feedback_text",
+      "type": "MessageTriggerNode",
+      "data": {
+        "type": "text",
+        "filter": "any",
+        "context": {
+          "value": ""
+        },
+        "state": {
+          "key": "feedback_text",
+          "type": "text"
+        }
+      },
+      "position": {
+        "x": 1480,
+        "y": 220
+      },
+      "width": 320,
+      "height": 320
+    },
+    {
+      "id": "feedback_thanks",
+      "type": "SendTextMessageNode",
+      "data": {
+        "messageText": "Rahmat! Sizning baho va fikr-mulohazangiz qabul qilindi.",
+        "parseMode": "HTML"
+      },
+      "position": {
+        "x": 1940,
+        "y": 220
+      },
+      "width": 380,
+      "height": 180
+    },
+    {
+      "id": "exit_completed",
+      "type": "SubFlowExitNode",
+      "data": {
+        "output": "completed"
+      },
+      "position": {
+        "x": 2440,
+        "y": 220
+      },
+      "width": 220,
+      "height": 120
+    },
+    {
+      "id": "exit_cancelled",
+      "type": "SubFlowExitNode",
+      "data": {
+        "output": "cancelled"
+      },
+      "position": {
+        "x": 540,
+        "y": 40
+      },
+      "width": 220,
+      "height": 120
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge__ask_rating__capture_rating__target-handler-ask_rating-1__default",
+      "source": "ask_rating",
+      "target": "capture_rating",
+      "type": "floating",
+      "sourceHandle": "target-handler-ask_rating-1"
+    },
+    {
+      "id": "edge__ask_rating__capture_rating__target-handler-ask_rating-2__default",
+      "source": "ask_rating",
+      "target": "capture_rating",
+      "type": "floating",
+      "sourceHandle": "target-handler-ask_rating-2"
+    },
+    {
+      "id": "edge__ask_rating__capture_rating__target-handler-ask_rating-3__default",
+      "source": "ask_rating",
+      "target": "capture_rating",
+      "type": "floating",
+      "sourceHandle": "target-handler-ask_rating-3"
+    },
+    {
+      "id": "edge__ask_rating__capture_rating__target-handler-ask_rating-4__default",
+      "source": "ask_rating",
+      "target": "capture_rating",
+      "type": "floating",
+      "sourceHandle": "target-handler-ask_rating-4"
+    },
+    {
+      "id": "edge__ask_rating__capture_rating__target-handler-ask_rating-5__default",
+      "source": "ask_rating",
+      "target": "capture_rating",
+      "type": "floating",
+      "sourceHandle": "target-handler-ask_rating-5"
+    },
+    {
+      "id": "edge__ask_rating__exit_cancelled__target-handler-ask_rating-❌_Bekor_qilish__default",
+      "source": "ask_rating",
+      "target": "exit_cancelled",
+      "type": "floating",
+      "sourceHandle": "target-handler-ask_rating-❌ Bekor qilish"
+    },
+    {
+      "id": "edge__capture_rating__ask_feedback_text__default__default",
+      "source": "capture_rating",
+      "target": "ask_feedback_text",
+      "type": "floating"
+    },
+    {
+      "id": "edge__ask_feedback_text__capture_feedback_text__default__default",
+      "source": "ask_feedback_text",
+      "target": "capture_feedback_text",
+      "type": "floating"
+    },
+    {
+      "id": "edge__capture_feedback_text__feedback_thanks__default__default",
+      "source": "capture_feedback_text",
+      "target": "feedback_thanks",
+      "type": "floating"
+    },
+    {
+      "id": "edge__feedback_thanks__exit_completed__default__default",
+      "source": "feedback_thanks",
+      "target": "exit_completed",
+      "type": "floating"
+    }
+  ]
+}

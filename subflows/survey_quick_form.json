@@ -1,0 +1,20 @@
+{
+  "nodes": [
+    {
+      "id": "survey_quick_flow",
+      "type": "CustomCodeNode",
+      "data": {
+        "jsCode": "function txt(){if(message&&message.text){return String(message.text).trim()}return \"\"}function ask(t){send_message({text:t,parse_mode:\"HTML\"})}function clean(){delete_context(\"_survey_quick_step\")}var steps=[{key:\"survey_q1\",prompt:get_context(\"param_q1_prompt\")||\"1-savol: Xizmat yoki mahsulot haqida umumiy fikringiz qanday?\",error:\"Kamida 3 ta belgi kiriting.\",min:3},{key:\"survey_q2\",prompt:get_context(\"param_q2_prompt\")||\"2-savol: Siz uchun eng muhim afzallik nima bo'ldi?\",error:\"Kamida 3 ta belgi kiriting.\",min:3},{key:\"survey_q3\",prompt:get_context(\"param_q3_prompt\")||\"3-savol: Nimani yaxshilashni tavsiya qilasiz?\",error:\"Kamida 3 ta belgi kiriting.\",min:3}];var step=parseInt(get_context(\"_survey_quick_step\")||\"0\",10);var answer=txt();if(answer.toLowerCase()===\"/cancel\"){clean();exit(\"cancelled\")}if(step>0){var prev=steps[step-1];if(answer.length<(prev.min||1)){ask(prev.error+\"\\n\\nBekor qilish uchun /cancel yuboring.\");wait_for_input()}set_context(prev.key,answer)}if(step>=steps.length){send_message({text:get_context(\"param_success_message\")||(\"<b>So'rovnoma qabul qilindi.</b>\\n\\n1) \"+(get_context(\"survey_q1\")||\"\")+\"\\n2) \"+(get_context(\"survey_q2\")||\"\")+\"\\n3) \"+(get_context(\"survey_q3\")||\"\")),parse_mode:\"HTML\"});clean();exit(\"completed\")}ask(steps[step].prompt+\"\\n\\nBekor qilish uchun /cancel yuboring.\");set_context(\"_survey_quick_step\",String(step+1));wait_for_input();"
+      },
+      "position": { "x": 0, "y": 180 },
+      "width": 520,
+      "height": 420
+    },
+    { "id": "exit_completed", "type": "SubFlowExitNode", "data": { "output": "completed" }, "position": { "x": 720, "y": 120 }, "width": 220, "height": 120 },
+    { "id": "exit_cancelled", "type": "SubFlowExitNode", "data": { "output": "cancelled" }, "position": { "x": 720, "y": 300 }, "width": 220, "height": 120 }
+  ],
+  "edges": [
+    { "id": "edge__survey_quick_flow__exit_completed__output-completed__default", "source": "survey_quick_flow", "target": "exit_completed", "type": "floating", "sourceHandle": "output-completed" },
+    { "id": "edge__survey_quick_flow__exit_cancelled__output-cancelled__default", "source": "survey_quick_flow", "target": "exit_cancelled", "type": "floating", "sourceHandle": "output-cancelled" }
+  ]
+}

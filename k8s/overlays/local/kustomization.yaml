@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+images:
+  - name: botmother-engine-go
+    newName: botmother-engine-go
+    newTag: latest
+patches:
+  - path: ingress-patch.yaml
+  - path: flow-patch.yaml

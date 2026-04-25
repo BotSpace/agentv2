@@ -1,0 +1,20 @@
+{
+  "nodes": [
+    {
+      "id": "complaint_flow",
+      "type": "CustomCodeNode",
+      "data": {
+        "jsCode": "function txt(){if(message&&message.text){return String(message.text).trim()}return \"\"}function ask(t){send_message({text:t,parse_mode:\"HTML\"})}function clean(){delete_context(\"_complaint_step\")}var steps=[{key:\"complaint_topic\",prompt:get_context(\"param_topic_prompt\")||\"Shikoyat mavzusini yozing:\",error:\"Mavzuni kiriting.\",min:3},{key:\"complaint_details\",prompt:get_context(\"param_details_prompt\")||\"Shikoyat tafsilotlarini yozing:\",error:\"Kamida 5 ta belgi kiriting.\",min:5},{key:\"complaint_order_ref\",prompt:get_context(\"param_ref_prompt\")||\"Buyurtma ID yoki reference bo'lsa yozing. Bo'lmasa '-' yuboring:\",error:\"Javobni qayta yuboring.\",min:1}];var step=parseInt(get_context(\"_complaint_step\")||\"0\",10);var answer=txt();if(answer.toLowerCase()===\"/cancel\"){clean();exit(\"cancelled\")}if(step>0){var prev=steps[step-1];var value=answer;if(prev.key===\"complaint_order_ref\"&&value===\"-\"){value=\"\"}if(value.length<(prev.min||1)){ask(prev.error+\"\\n\\nBekor qilish uchun /cancel yuboring.\");wait_for_input()}set_context(prev.key,value)}if(step>=steps.length){send_message({text:get_context(\"param_success_message\")||(\"<b>Shikoyatingiz qabul qilindi.</b>\\n\\n📝 \"+(get_context(\"complaint_topic\")||\"\")+\"\\n📄 \"+(get_context(\"complaint_details\")||\"\")+\"\\n🔖 \"+(get_context(\"complaint_order_ref\")||\"-\")),parse_mode:\"HTML\"});clean();exit(\"completed\")}ask(steps[step].prompt+\"\\n\\nBekor qilish uchun /cancel yuboring.\");set_context(\"_complaint_step\",String(step+1));wait_for_input();"
+      },
+      "position": { "x": 0, "y": 180 },
+      "width": 520,
+      "height": 420
+    },
+    { "id": "exit_completed", "type": "SubFlowExitNode", "data": { "output": "completed" }, "position": { "x": 720, "y": 120 }, "width": 220, "height": 120 },
+    { "id": "exit_cancelled", "type": "SubFlowExitNode", "data": { "output": "cancelled" }, "position": { "x": 720, "y": 300 }, "width": 220, "height": 120 }
+  ],
+  "edges": [
+    { "id": "edge__complaint_flow__exit_completed__output-completed__default", "source": "complaint_flow", "target": "exit_completed", "type": "floating", "sourceHandle": "output-completed" },
+    { "id": "edge__complaint_flow__exit_cancelled__output-cancelled__default", "source": "complaint_flow", "target": "exit_cancelled", "type": "floating", "sourceHandle": "output-cancelled" }
+  ]
+}
