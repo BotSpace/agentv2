@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: git@github.com:BotSpace/agentv2.git
+    repoURL: https://github.com/BotSpace/agentv2.git
     targetRevision: main
     path: k8s/chart/agentv2
     helm:
