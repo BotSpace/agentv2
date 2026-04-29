@@ -1,6 +1,6 @@
-# Agentv2 Kubernetes Deploy
+# Agentv2 Kubernetes Manifests
 
-This directory deploys the Python Botmother Flow Agent API as a separate `agentv2` workload in the existing `botmother` namespace. It does not replace the existing production `botmother-agent` Deployment.
+This directory keeps the Helm chart used to render the Python Botmother Flow Agent API manifests. The live cluster is managed by Flux CD from the separate `BotSpace/k8s` repository.
 
 ## CI/CD Flow
 
@@ -10,7 +10,8 @@ On every push to `main`, `.github/workflows/deploy.yml`:
 2. Pushes it to `registry.iprogrammer.uz/agentv2/botmother-agent:prod-<short-sha>`.
 3. Updates `k8s/chart/agentv2/values-prod.yaml` with the new tag.
 4. Commits the tag update back to `main` with `[skip ci]`.
-5. Argo CD renders the Helm chart at `k8s/chart/agentv2` with `values-prod.yaml` and syncs it into the `botmother` namespace.
+
+Flux CD does not read this repository directly. Rendered Kubernetes YAML for Flux lives in the `BotSpace/k8s` repo.
 
 ## One-Time Setup
 
@@ -41,15 +42,7 @@ Common runtime values:
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_REGION` when using Bedrock.
 - `OLLAMA_HOST` only if `IS_OLLAMA=true`.
 
-Apply the Argo CD Application after Argo CD is healthy:
-
-```bash
-kubectl apply -f k8s/argocd/agentv2-application.yaml
-```
-
-Argo CD must also have Git access to `git@github.com:BotSpace/agentv2.git`.
-
-Note: the current cluster inspection showed no Argo Applications and an unavailable `argocd-repo-server`. Fix Argo CD health before relying on automatic sync.
+To deploy through Flux, update the rendered manifest in the `BotSpace/k8s` repository and enable the resource from that repo's Kustomization.
 
 ## Local Checks
 
@@ -79,7 +72,7 @@ kubectl -n botmother get deploy,svc,ingress agentv2
 kubectl -n botmother rollout status deploy/agentv2
 kubectl -n botmother get pods -l app.kubernetes.io/name=agentv2
 curl https://api.botmother.uz/api/agentv2/health
-kubectl -n argocd get application agentv2
+kubectl -n flux-system get kustomization
 ```
 
 ## Storage
