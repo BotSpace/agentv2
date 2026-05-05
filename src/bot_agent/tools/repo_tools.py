@@ -14,16 +14,18 @@ def build_project_catalog(workspace_root: Path, project_dir: str) -> dict[str, A
     return {
         "workspace_root": str(workspace_root),
         "default_project_dir": project_dir,
+        "path_rule": (
+            "Bot project tools resolve relative paths against default_project_dir. "
+            "Use `.` for the bot project root and paths like `cmd/bot/main.go` for files inside it."
+        ),
         "generated_files": [
             "go.mod",
             "cmd/bot/main.go",
             "internal/app/app.go",
             "internal/config/config.go",
             "internal/handlers/handler.go",
+            "internal/state/store.go",
             "pkg/messages/messages.go",
-            "pkg/messages/templates/start.tmpl",
-            "pkg/messages/templates/help.tmpl",
-            "pkg/messages/templates/unknown_command.tmpl",
             ".env.example",
             "README.md",
         ],

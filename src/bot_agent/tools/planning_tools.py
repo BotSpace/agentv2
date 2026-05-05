@@ -18,7 +18,13 @@ def build_planning_tools() -> list[AgentTool]:
         details: str | None = None
 
     class CreateTaskPlanArgs(BaseModel):
-        items: list[PlanItemArgs] = Field(min_length=1)
+        items: list[PlanItemArgs] = Field(
+            min_length=1,
+            description=(
+                "Ordered implementation plan. For new product bots, use 5-8 items covering "
+                "scaffold, domain sections, inline buttons/callbacks, copy, README, and validation."
+            ),
+        )
 
     class UpdateTaskPlanItemArgs(BaseModel):
         item_id: str
@@ -66,7 +72,10 @@ def build_planning_tools() -> list[AgentTool]:
     return [
         AgentTool(
             name="create_task_plan",
-            description="Create an ordered task plan before writing or changing bot project files.",
+            description=(
+                "Create an ordered task plan before writing or changing bot project files. "
+                "For new product bots, avoid tiny plans; cover scaffold, features, UI buttons, copy, and validation."
+            ),
             args_model=CreateTaskPlanArgs,
             handler=create_task_plan,
         ),

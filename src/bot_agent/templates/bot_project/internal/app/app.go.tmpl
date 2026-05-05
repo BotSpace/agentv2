@@ -8,6 +8,7 @@ import (
 
 	"{{module_name}}/internal/config"
 	"{{module_name}}/internal/handlers"
+	"{{module_name}}/internal/state"
 )
 
 type App struct {
@@ -23,7 +24,7 @@ func New(cfg config.Config) (*App, error) {
 
 	return &App{
 		bot:     bot,
-		handler: handlers.New(),
+		handler: handlers.New(state.NewMemoryStore()),
 	}, nil
 }
 
@@ -45,9 +46,12 @@ func (a *App) Run(ctx context.Context) error {
 }
 
 func (a *App) handleUpdate(update tgbotapi.Update) error {
-	if update.Message == nil {
-		return nil
+	if update.CallbackQuery != nil {
+		return a.handler.HandleCallbackQuery(a.bot, update.CallbackQuery)
+	}
+	if update.Message != nil {
+		return a.handler.HandleMessage(a.bot, update.Message)
 	}
 
-	return a.handler.HandleMessage(a.bot, update.Message)
+	return nil
 }

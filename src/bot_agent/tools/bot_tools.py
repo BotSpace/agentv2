@@ -17,7 +17,12 @@ def build_bot_tools() -> list[AgentTool]:
         pass
 
     class PathArgs(BaseModel):
-        path: str = Field(description="Relative or absolute path inside the workspace.")
+        path: str = Field(
+            description=(
+                "Path inside the generated bot project. Relative paths like `.` or `cmd/bot/main.go` "
+                "are resolved against the configured project directory."
+            )
+        )
 
     class ReadFileArgs(BaseModel):
         path: str
@@ -36,7 +41,13 @@ def build_bot_tools() -> list[AgentTool]:
 
     class RunCommandArgs(BaseModel):
         command: str
-        cwd: str | None = None
+        cwd: str | None = Field(
+            default=None,
+            description=(
+                "Working directory inside the generated bot project. Omit it or pass `.` to run in "
+                "the configured project directory."
+            ),
+        )
 
     class ScaffoldBotProjectArgs(BaseModel):
         overwrite: bool = Field(
@@ -119,7 +130,7 @@ def build_bot_tools() -> list[AgentTool]:
         )
 
     def list_files(context: ToolContext, args: PathArgs) -> ToolExecutionResult:
-        target = resolve_workspace_path(context, args.path)
+        target = resolve_bot_path(context, args.path)
         if not target.exists():
             return ToolExecutionResult(content=f"path does not exist: {args.path}", is_error=True)
         if target.is_file():
@@ -133,7 +144,7 @@ def build_bot_tools() -> list[AgentTool]:
         )
 
     def read_file(context: ToolContext, args: ReadFileArgs) -> ToolExecutionResult:
-        target = resolve_workspace_path(context, args.path)
+        target = resolve_bot_path(context, args.path)
         if not target.exists() or not target.is_file():
             return ToolExecutionResult(content=f"file not found: {args.path}", is_error=True)
         lines = target.read_text(encoding="utf-8").splitlines()
@@ -146,7 +157,7 @@ def build_bot_tools() -> list[AgentTool]:
         blocked = require_task_plan(context)
         if blocked:
             return blocked
-        target = resolve_workspace_path(context, args.path)
+        target = resolve_bot_path(context, args.path)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(args.content, encoding="utf-8")
         payload = {"path": display_path(target, context.workspace_root), "bytes": len(args.content.encode("utf-8"))}
@@ -157,7 +168,7 @@ def build_bot_tools() -> list[AgentTool]:
         blocked = require_task_plan(context)
         if blocked:
             return blocked
-        target = resolve_workspace_path(context, args.path)
+        target = resolve_bot_path(context, args.path)
         if not target.exists() or not target.is_file():
             return ToolExecutionResult(content=f"file not found: {args.path}", is_error=True)
         original = target.read_text(encoding="utf-8")
@@ -173,14 +184,14 @@ def build_bot_tools() -> list[AgentTool]:
         blocked = require_task_plan(context)
         if blocked:
             return blocked
-        target = resolve_workspace_path(context, args.path)
+        target = resolve_bot_path(context, args.path)
         target.mkdir(parents=True, exist_ok=True)
         payload = {"path": display_path(target, context.workspace_root)}
         emit_agent_event(context, "directory_created", payload)
         return ToolExecutionResult(content=json.dumps(payload, ensure_ascii=False, indent=2))
 
     def run_command(context: ToolContext, args: RunCommandArgs) -> ToolExecutionResult:
-        cwd = resolve_workspace_path(context, args.cwd or context.state.get("project_dir") or ".")
+        cwd = resolve_bot_path(context, args.cwd or ".")
         completed = subprocess.run(
             args.command,
             cwd=cwd,
@@ -261,37 +272,40 @@ def build_bot_tools() -> list[AgentTool]:
         ),
         AgentTool(
             name="list_files",
-            description="List files under a directory or show the file name when the path is a file.",
+            description=(
+                "List files under a generated bot project path. Use `.` for the bot project root; "
+                "relative paths are project-relative."
+            ),
             args_model=PathArgs,
             handler=list_files,
         ),
         AgentTool(
             name="read_file",
-            description="Read a UTF-8 file with optional line bounds.",
+            description="Read a UTF-8 file from the generated bot project with optional line bounds.",
             args_model=ReadFileArgs,
             handler=read_file,
         ),
         AgentTool(
             name="write_file",
-            description="Create or fully overwrite a UTF-8 file.",
+            description="Create or fully overwrite a UTF-8 file in the generated bot project.",
             args_model=WriteFileArgs,
             handler=write_file,
         ),
         AgentTool(
             name="replace_in_file",
-            description="Replace existing text inside a UTF-8 file.",
+            description="Replace existing text inside a UTF-8 file in the generated bot project.",
             args_model=ReplaceInFileArgs,
             handler=replace_in_file,
         ),
         AgentTool(
             name="make_directory",
-            description="Create a directory path inside the workspace.",
+            description="Create a directory path inside the generated bot project.",
             args_model=PathArgs,
             handler=make_directory,
         ),
         AgentTool(
             name="run_command",
-            description="Run a shell command inside the workspace or a chosen subdirectory.",
+            description="Run a shell command inside the generated bot project or a chosen project subdirectory.",
             args_model=RunCommandArgs,
             handler=run_command,
         ),
@@ -339,10 +353,8 @@ def scaffold_template_map() -> dict[str, str]:
         "internal/app/app.go": "internal/app/app.go.tmpl",
         "internal/config/config.go": "internal/config/config.go.tmpl",
         "internal/handlers/handler.go": "internal/handlers/handler.go.tmpl",
+        "internal/state/store.go": "internal/state/store.go.tmpl",
         "pkg/messages/messages.go": "pkg/messages/messages.go.tmpl",
-        "pkg/messages/templates/start.tmpl": "pkg/messages/templates/start.tmpl",
-        "pkg/messages/templates/help.tmpl": "pkg/messages/templates/help.tmpl",
-        "pkg/messages/templates/unknown_command.tmpl": "pkg/messages/templates/unknown_command.tmpl",
     }
 
 
@@ -368,6 +380,25 @@ def title_case_name(raw: str) -> str:
 def bot_project_dir(context: ToolContext) -> Path:
     raw = context.state.get("bot_project_dir") or context.state.get("project_dir") or "generated_bots/bot"
     return resolve_workspace_path(context, str(raw))
+
+
+def resolve_bot_path(context: ToolContext, raw: str | None) -> Path:
+    if raw is None or not str(raw).strip() or str(raw).strip() == ".":
+        return bot_project_dir(context)
+    path = Path(str(raw))
+    root = context.workspace_root.resolve()
+    project_dir = bot_project_dir(context).resolve()
+    if path.is_absolute():
+        candidate = path.resolve()
+    else:
+        workspace_candidate = (root / path).resolve()
+        if workspace_candidate == project_dir or project_dir in workspace_candidate.parents:
+            candidate = workspace_candidate
+        else:
+            candidate = (project_dir / path).resolve()
+    if root not in candidate.parents and candidate != root:
+        raise ValueError(f"path escapes workspace: {raw}")
+    return candidate
 
 
 def resolve_workspace_path(context: ToolContext, raw: str) -> Path:

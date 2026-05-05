@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import operator
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
@@ -45,6 +46,7 @@ class AgentRuntime:
     model: Any
     registry: ToolRegistry
     ui: ConsoleUI
+    max_model_attempts: int = 20
 
 
 def build_agent_graph(runtime: AgentRuntime, checkpointer: Any | None = None):
@@ -52,15 +54,20 @@ def build_agent_graph(runtime: AgentRuntime, checkpointer: Any | None = None):
     builder = StateGraph(AgentState)
 
     def llm_call(state: AgentState) -> dict[str, Any]:
-        messages = [SystemMessage(content=build_system_prompt(state)), *state.get("messages", [])]
         skip_tools = should_skip_tools_for_turn(state)
         runtime.ui.debug(
             f"llm_call start skip_tools={skip_tools} message_count={len(state.get('messages', []))}"
         )
         if skip_tools:
-            response = runtime.model.invoke(messages)
+            response = AIMessage(content=smalltalk_response())
         else:
-            response = model_with_tools.invoke(messages)
+            messages = [SystemMessage(content=build_system_prompt(state)), *state.get("messages", [])]
+            response = invoke_model_with_retry(
+                model_with_tools,
+                messages,
+                runtime.ui,
+                max_attempts=runtime.max_model_attempts,
+            )
         runtime.ui.debug(
             "llm_call done "
             f"tool_calls={len(getattr(response, 'tool_calls', []) or [])} "
@@ -103,7 +110,7 @@ def build_agent_graph(runtime: AgentRuntime, checkpointer: Any | None = None):
                 tool_messages.append(ToolMessage(content=result.content, tool_call_id=call["id"]))
             if result.is_error:
                 runtime.ui.warning(result.content)
-            else:
+            elif should_emit_tool_result(runtime.ui):
                 runtime.ui.status(result.content)
             updates = merge_state_updates(updates, result.state_updates)
             current_state = merge_state_updates(current_state, result.state_updates)
@@ -190,6 +197,62 @@ def build_agent_graph(runtime: AgentRuntime, checkpointer: Any | None = None):
     return builder.compile(checkpointer=checkpointer or MemorySaver())
 
 
+def invoke_model_with_retry(
+    model: Any,
+    messages: list[AnyMessage],
+    ui: ConsoleUI,
+    *,
+    max_attempts: int = 20,
+    sleep_fn: Any = time.sleep,
+) -> AIMessage:
+    delay = 1
+    last_error: Exception | None = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            ui.debug(f"model invoke attempt={attempt}/{max_attempts}")
+            return model.invoke(messages)
+        except Exception as exc:
+            last_error = exc
+            if attempt >= max_attempts:
+                ui.debug(f"model invoke failed permanently attempt={attempt} error={exc!r}")
+                break
+            error_text = compact_error(exc)
+            timeout_hint = timeout_error_hint(exc)
+            ui.warning(
+                f"Model/API xatolik berdi: {error_text}.{timeout_hint} "
+                f"{delay}s dan keyin qayta urinaman "
+                f"({attempt}/{max_attempts})."
+            )
+            ui.debug(f"model invoke retry error={exc!r} next_delay={delay}s")
+            sleep_fn(delay)
+            delay *= 2
+    assert last_error is not None
+    raise last_error
+
+
+def compact_error(exc: Exception, *, max_length: int = 220) -> str:
+    text = f"{type(exc).__name__}: {exc}"
+    normalized = " ".join(text.split())
+    if len(normalized) <= max_length:
+        return normalized
+    return normalized[: max_length - 3] + "..."
+
+
+def timeout_error_hint(exc: Exception) -> str:
+    error_name = type(exc).__name__.lower()
+    error_text = str(exc).lower()
+    if "timeout" not in error_name and "timed out" not in error_text and "timeout" not in error_text:
+        return ""
+    return (
+        " Client timeout server javob vaqtidan kichik bo'lishi mumkin; "
+        "`--request-timeout 120` yoki kattaroq qiymat bering."
+    )
+
+
+def should_emit_tool_result(ui: ConsoleUI) -> bool:
+    return not isinstance(ui, ConsoleUI) or ui.debug_enabled
+
+
 def should_skip_tools_for_turn(state: AgentState) -> bool:
     if has_incomplete_plan(state.get("current_plan")):
         return False
@@ -229,6 +292,13 @@ def is_smalltalk_message(text: str) -> bool:
         "yaxshimisiz",
     }
     return normalized in smalltalk_phrases
+
+
+def smalltalk_response() -> str:
+    return (
+        "Assalomu alaykum! Qanday bot yaratish kerak? Masalan: o'quv markaz, "
+        "do'kon, klinika yoki support bot."
+    )
 
 
 def merge_state_updates(base: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:

@@ -11,6 +11,8 @@ from bot_agent.auth import CurrentUser, get_current_user
 from bot_agent.cli import (
     ModelSettings,
     app,
+    default_request_timeout,
+    effective_request_timeout,
     merge_model_settings,
     normalize_openai_base_url,
     run_chat_session,
@@ -19,9 +21,12 @@ from bot_agent.cli import (
 from bot_agent.graph import (
     AgentRuntime,
     build_agent_graph,
+    compact_error,
     initial_state,
+    invoke_model_with_retry,
     is_smalltalk_message,
     latest_assistant_text,
+    timeout_error_hint,
 )
 from bot_agent.prompts import build_system_prompt
 from bot_agent.storage import PersistentRunStore
@@ -51,6 +56,19 @@ class FakeModel:
 
     def invoke(self, _messages):
         return self.responses[0]
+
+
+class FlakyModel:
+    def __init__(self, failures: int, response: AIMessage):
+        self.failures = failures
+        self.response = response
+        self.calls = 0
+
+    def invoke(self, _messages):
+        self.calls += 1
+        if self.calls <= self.failures:
+            raise RuntimeError("temporary api failure")
+        return self.response
 
 
 def test_registry_contains_file_based_tools() -> None:
@@ -98,10 +116,8 @@ def test_scaffold_bot_project_creates_default_files(tmp_path: Path, monkeypatch)
     assert (project_dir / "internal" / "app" / "app.go").exists()
     assert (project_dir / "internal" / "config" / "config.go").exists()
     assert (project_dir / "internal" / "handlers" / "handler.go").exists()
+    assert (project_dir / "internal" / "state" / "store.go").exists()
     assert (project_dir / "pkg" / "messages" / "messages.go").exists()
-    assert (project_dir / "pkg" / "messages" / "templates" / "start.tmpl").exists()
-    assert (project_dir / "pkg" / "messages" / "templates" / "help.tmpl").exists()
-    assert (project_dir / "pkg" / "messages" / "templates" / "unknown_command.tmpl").exists()
     assert (project_dir / ".env.example").exists()
     assert (project_dir / "README.md").exists()
     assert "module demo_bot" in (project_dir / "go.mod").read_text(encoding="utf-8")
@@ -111,12 +127,22 @@ def test_scaffold_bot_project_creates_default_files(tmp_path: Path, monkeypatch)
     assert '"demo_bot/internal/config"' in main_go
     app_go = (project_dir / "internal" / "app" / "app.go").read_text(encoding="utf-8")
     assert "func (a *App) Run" in app_go
+    assert "HandleCallbackQuery" in app_go
+    assert "state.NewMemoryStore()" in app_go
     handler_go = (project_dir / "internal" / "handlers" / "handler.go").read_text(encoding="utf-8")
     assert "func (h *Handler) HandleMessage" in handler_go
+    assert "func (h *Handler) HandleCallbackQuery" in handler_go
+    assert "NewEditMessageTextAndMarkup" in handler_go
+    assert "query.Message == nil" in handler_go
+    assert "NewInlineKeyboardMarkup" in handler_go
+    assert "*state.MemoryStore" in handler_go
+    state_go = (project_dir / "internal" / "state" / "store.go").read_text(encoding="utf-8")
+    assert "type UserState struct" in state_go
+    assert "func (s *MemoryStore) SetStep" in state_go
     messages_go = (project_dir / "pkg" / "messages" / "messages.go").read_text(encoding="utf-8")
-    assert "//go:embed templates/*.tmpl" in messages_go
-    assert "template.ParseFS" in messages_go
-    assert "Salom!" not in messages_go
+    assert "Assalomu alaykum!" in messages_go
+    assert "func Menu() string" in messages_go
+    assert "//go:embed" not in messages_go
 
 
 def test_prompt_instructs_agent_to_scaffold_first() -> None:
@@ -126,22 +152,69 @@ def test_prompt_instructs_agent_to_scaffold_first() -> None:
     assert "cmd/bot" in prompt
     assert "internal/app" in prompt
     assert "pkg" in prompt
-    assert ".tmpl" in prompt
+    assert "generated bot projects may keep simple user-facing text in Go files" in prompt
+    assert "Do not stop at only /start and /help" in prompt
+    assert "education center" in prompt
+    assert "inline buttons" in prompt
+    assert "prefer editing the existing bot message" in prompt
+    assert "EditMessageTextAndMarkup" in prompt
+    assert "Default scaffold code after scaffold_bot_project" in prompt
+    assert "working from the repository/workspace root" in prompt
+    assert "cmd/bot/main.go" in prompt
+    assert "tool layer will automatically map" in prompt
+    assert "### cmd/bot/main.go" in prompt
+    assert '"demo/internal/app"' in prompt
+    assert "func (h *Handler) HandleCallbackQuery" in prompt
+    assert "NewEditMessageTextAndMarkup" in prompt
+    assert "NewInlineKeyboardMarkup" in prompt
+    assert "Assalomu alaykum!" in prompt
+    assert "internal/state" in prompt
+    assert "current step/screen" in prompt
 
 
 def test_write_and_read_file_tools_work(tmp_path: Path) -> None:
     registry = build_tool_registry()
     context = ToolContext(
         workspace_root=tmp_path,
-        state={"current_plan": {"items": [{"id": "build", "title": "Build", "status": "in_progress"}]}},
+        state={
+            "project_dir": "bot",
+            "current_plan": {"items": [{"id": "build", "title": "Build", "status": "in_progress"}]},
+        },
         ui=ConsoleUI(),
     )
 
-    write = registry.execute("write_file", context, {"path": "bot/main.go", "content": "package main\n"})
-    read = registry.execute("read_file", context, {"path": "bot/main.go"})
+    write = registry.execute("write_file", context, {"path": "main.go", "content": "package main\n"})
+    read = registry.execute("read_file", context, {"path": "main.go"})
 
     assert write.is_error is False
     assert "1: package main" in read.content
+    assert (tmp_path / "bot" / "main.go").exists()
+
+
+def test_bot_file_tools_treat_dot_as_project_root(tmp_path: Path) -> None:
+    registry = build_tool_registry()
+    context = ToolContext(workspace_root=tmp_path, state={"project_dir": "generated_bots/my_bot"}, ui=ConsoleUI())
+    project_dir = tmp_path / "generated_bots" / "my_bot"
+    project_dir.mkdir(parents=True)
+    (project_dir / "go.mod").write_text("module my_bot\n", encoding="utf-8")
+
+    result = registry.execute("list_files", context, {"path": "."})
+
+    assert result.is_error is False
+    assert '"go.mod"' in result.content
+
+
+def test_bot_file_tools_accept_already_prefixed_project_paths(tmp_path: Path) -> None:
+    registry = build_tool_registry()
+    context = ToolContext(workspace_root=tmp_path, state={"project_dir": "generated_bots/my_bot"}, ui=ConsoleUI())
+    project_dir = tmp_path / "generated_bots" / "my_bot"
+    project_dir.mkdir(parents=True)
+    (project_dir / "go.mod").write_text("module my_bot\n", encoding="utf-8")
+
+    result = registry.execute("read_file", context, {"path": "generated_bots/my_bot/go.mod"})
+
+    assert result.is_error is False
+    assert "1: module my_bot" in result.content
 
 
 def test_replace_in_file_tool_updates_existing_file(tmp_path: Path) -> None:
@@ -151,14 +224,17 @@ def test_replace_in_file_tool_updates_existing_file(tmp_path: Path) -> None:
     registry = build_tool_registry()
     context = ToolContext(
         workspace_root=tmp_path,
-        state={"current_plan": {"items": [{"id": "edit", "title": "Edit", "status": "in_progress"}]}},
+        state={
+            "project_dir": "bot",
+            "current_plan": {"items": [{"id": "edit", "title": "Edit", "status": "in_progress"}]},
+        },
         ui=ConsoleUI(),
     )
 
     result = registry.execute(
         "replace_in_file",
         context,
-        {"path": "bot/main.go", "old": "package main", "new": "package main\n\nimport \"fmt\""},
+        {"path": "main.go", "old": "package main", "new": "package main\n\nimport \"fmt\""},
     )
 
     assert result.is_error is False
@@ -176,7 +252,7 @@ def test_run_command_tool_uses_requested_cwd(tmp_path: Path, monkeypatch) -> Non
     registry = build_tool_registry()
     context = ToolContext(workspace_root=tmp_path, state={"project_dir": "bot"}, ui=ConsoleUI())
 
-    result = registry.execute("run_command", context, {"command": "go test ./...", "cwd": "bot"})
+    result = registry.execute("run_command", context, {"command": "go test ./...", "cwd": "."})
 
     assert result.is_error is False
     assert calls == [("go test ./...", tmp_path / "bot")]
@@ -236,12 +312,61 @@ def test_graph_waits_for_plan_completion() -> None:
     assert latest_assistant_text(result) == "Done."
 
 
+def test_model_invoke_retries_transient_errors() -> None:
+    sleeps = []
+    model = FlakyModel(failures=2, response=AIMessage(content="Recovered."))
+
+    response = invoke_model_with_retry(
+        model,
+        [HumanMessage(content="build bot")],
+        ConsoleUI(),
+        max_attempts=20,
+        sleep_fn=lambda seconds: sleeps.append(seconds),
+    )
+
+    assert response.content == "Recovered."
+    assert model.calls == 3
+    assert sleeps == [1, 2]
+
+
+def test_compact_error_includes_type_and_short_message() -> None:
+    error = RuntimeError("api response parse failed\nmissing tool_call id")
+
+    assert compact_error(error) == "RuntimeError: api response parse failed missing tool_call id"
+
+
+def test_compact_error_truncates_long_messages() -> None:
+    error = RuntimeError("x" * 300)
+
+    text = compact_error(error, max_length=40)
+
+    assert text.startswith("RuntimeError: ")
+    assert text.endswith("...")
+    assert len(text) == 40
+
+
+def test_timeout_error_hint_suggests_larger_request_timeout() -> None:
+    assert "--request-timeout 120" in timeout_error_hint(TimeoutError("Request timed out"))
+    assert timeout_error_hint(RuntimeError("temporary api failure")) == ""
+
+
 def test_graph_skips_tools_for_smalltalk() -> None:
+    calls = []
+
+    class UnexpectedModel(FakeModel):
+        def invoke(self, _messages):
+            calls.append("invoke")
+            raise AssertionError("smalltalk should not call the model")
+
+        def bind_tools(self, _tools):
+            calls.append("bind_tools")
+            return super().bind_tools(_tools)
+
     runtime = AgentRuntime(
         workspace_root=Path.cwd(),
         registry=build_tool_registry(),
         ui=ConsoleUI(),
-        model=FakeModel([AIMessage(content="Salom!")]),
+        model=UnexpectedModel([AIMessage(content="should not be used")]),
     )
     graph = build_agent_graph(runtime)
     state = initial_state(
@@ -255,7 +380,10 @@ def test_graph_skips_tools_for_smalltalk() -> None:
         config={"configurable": {"thread_id": "t-smalltalk"}, "recursion_limit": 10},
     )
 
-    assert latest_assistant_text(result) == "Salom!"
+    response = latest_assistant_text(result)
+    assert "Qanday bot yaratish kerak?" in response
+    assert "o'quv markaz" in response
+    assert calls == ["bind_tools"]
 
 
 def test_is_smalltalk_message_detects_greeting() -> None:
@@ -413,8 +541,12 @@ def test_create_model_uses_openai_with_custom_api(monkeypatch) -> None:
     assert captured["base_url"] == "https://example.test/v1"
     assert captured["api_key"] == "secret"
     assert captured["temperature"] == 0
-    assert captured["timeout"] == 30
+    assert captured["timeout"] == default_request_timeout()
     assert captured["max_retries"] == 0
+
+
+def test_effective_request_timeout_uses_explicit_value() -> None:
+    assert effective_request_timeout(ModelSettings(request_timeout=15)) == 15
 
 
 def test_create_model_allows_keyless_custom_openai_endpoint(monkeypatch) -> None:

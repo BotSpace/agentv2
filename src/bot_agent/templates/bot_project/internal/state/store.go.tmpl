@@ -1,0 +1,85 @@
+package state
+
+import "sync"
+
+const (
+	StepMainMenu = "main_menu"
+	StepAbout    = "about"
+	StepContact  = "contact"
+	StepUnknown  = "unknown"
+)
+
+type UserState struct {
+	Step string
+	Data map[string]string
+}
+
+type MemoryStore struct {
+	mu    sync.RWMutex
+	users map[int64]UserState
+}
+
+func NewMemoryStore() *MemoryStore {
+	return &MemoryStore{
+		users: make(map[int64]UserState),
+	}
+}
+
+func (s *MemoryStore) Get(userID int64) UserState {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	state, ok := s.users[userID]
+	if !ok {
+		return UserState{Step: StepMainMenu, Data: map[string]string{}}
+	}
+	return cloneState(state)
+}
+
+func (s *MemoryStore) SetStep(userID int64, step string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	state := s.users[userID]
+	if state.Data == nil {
+		state.Data = map[string]string{}
+	}
+	state.Step = step
+	s.users[userID] = state
+}
+
+func (s *MemoryStore) SetData(userID int64, key string, value string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	state := s.users[userID]
+	if state.Step == "" {
+		state.Step = StepMainMenu
+	}
+	if state.Data == nil {
+		state.Data = map[string]string{}
+	}
+	state.Data[key] = value
+	s.users[userID] = state
+}
+
+func (s *MemoryStore) Reset(userID int64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.users[userID] = UserState{
+		Step: StepMainMenu,
+		Data: map[string]string{},
+	}
+}
+
+func cloneState(state UserState) UserState {
+	data := make(map[string]string, len(state.Data))
+	for key, value := range state.Data {
+		data[key] = value
+	}
+	if state.Step == "" {
+		state.Step = StepMainMenu
+	}
+	return UserState{Step: state.Step, Data: data}
+}

@@ -9,8 +9,8 @@ Generated loyiha odatda quyidagi fayllardan iborat bo'ladi:
 - `internal/app/app.go`
 - `internal/config/config.go`
 - `internal/handlers/handler.go`
+- `internal/state/store.go`
 - `pkg/messages/messages.go`
-- `pkg/messages/templates/*.tmpl`
 - `.env.example`
 - `README.md`
 
@@ -42,11 +42,14 @@ bot-agent chat \
   --provider openai \
   --api-key sk-... \
   --api-base https://your-openai-compatible-api.example/v1 \
+  --request-timeout 120 \
   --model gpt-4.1 \
   --project-dir generated_bots/support
 ```
 
 Eslatma: OpenAI-compatible endpoint odatda `/v1` bilan tugaydi. Agar `OPENAI_BASE_URL=http://localhost:4141/` kabi root URL bersangiz, agent uni avtomatik `.../v1` ga to'g'rilaydi.
+
+OpenAI-compatible lokal API sekin javob bersa, `--request-timeout` qiymati server javob vaqtidan katta bo'lishi kerak. Masalan server 25s da javob qaytarsa `--request-timeout 60` yoki `--request-timeout 120` ishlating. Juda kichik timeout client requestni erta yopadi, server logida esa keyinroq `200` ko'rinishi mumkin.
 
 ## API
 

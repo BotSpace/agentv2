@@ -3,19 +3,56 @@ package handlers
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
+	"{{module_name}}/internal/state"
 	"{{module_name}}/pkg/messages"
 )
 
-type Handler struct{}
+type Handler struct {
+	states *state.MemoryStore
+}
 
-func New() *Handler {
-	return &Handler{}
+const (
+	callbackMenu    = "menu"
+	callbackAbout   = "about"
+	callbackContact = "contact"
+)
+
+func New(states *state.MemoryStore) *Handler {
+	return &Handler{states: states}
 }
 
 func (h *Handler) HandleMessage(bot *tgbotapi.BotAPI, message *tgbotapi.Message) error {
+	userState := h.states.Get(message.From.ID)
 	text := h.messageText(message)
 	msg := tgbotapi.NewMessage(message.Chat.ID, text)
+	if shouldShowMainMenu(message) {
+		msg.ReplyMarkup = mainMenuKeyboard()
+	}
+	if !message.IsCommand() && userState.Step != state.StepMainMenu {
+		msg.Text = messages.CurrentStep(userState.Step)
+	}
 	_, err := bot.Send(msg)
+	return err
+}
+
+func (h *Handler) HandleCallbackQuery(bot *tgbotapi.BotAPI, query *tgbotapi.CallbackQuery) error {
+	callback := tgbotapi.NewCallback(query.ID, "")
+	if _, err := bot.Request(callback); err != nil {
+		return err
+	}
+	if query.Message == nil {
+		return nil
+	}
+
+	text := h.callbackText(query.Data)
+	h.states.SetStep(query.From.ID, stepForCallback(query.Data))
+	edit := tgbotapi.NewEditMessageTextAndMarkup(
+		query.Message.Chat.ID,
+		query.Message.MessageID,
+		text,
+		mainMenuKeyboard(),
+	)
+	_, err := bot.Send(edit)
 	return err
 }
 
@@ -26,10 +63,64 @@ func (h *Handler) messageText(message *tgbotapi.Message) string {
 
 	switch message.Command() {
 	case "start":
+		h.states.Reset(message.From.ID)
 		return messages.Start()
 	case "help":
 		return messages.Help()
+	case "menu":
+		h.states.SetStep(message.From.ID, state.StepMainMenu)
+		return messages.Menu()
 	default:
 		return messages.UnknownCommand()
 	}
+}
+
+func stepForCallback(data string) string {
+	switch data {
+	case callbackMenu:
+		return state.StepMainMenu
+	case callbackAbout:
+		return state.StepAbout
+	case callbackContact:
+		return state.StepContact
+	default:
+		return state.StepUnknown
+	}
+}
+
+func (h *Handler) callbackText(data string) string {
+	switch data {
+	case callbackMenu:
+		return messages.Menu()
+	case callbackAbout:
+		return messages.About()
+	case callbackContact:
+		return messages.Contact()
+	default:
+		return messages.UnknownCommand()
+	}
+}
+
+func shouldShowMainMenu(message *tgbotapi.Message) bool {
+	if !message.IsCommand() {
+		return true
+	}
+	switch message.Command() {
+	case "start", "menu":
+		return true
+	default:
+		return false
+	}
+}
+
+func mainMenuKeyboard() tgbotapi.InlineKeyboardMarkup {
+	return tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("📋 Menyu", callbackMenu),
+			tgbotapi.NewInlineKeyboardButtonData("ℹ️ Ma'lumot", callbackAbout),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("📞 Aloqa", callbackContact),
+		),
+	)
 }

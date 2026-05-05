@@ -57,6 +57,10 @@ def default_recursion_limit() -> int:
     return 200
 
 
+def default_request_timeout() -> float:
+    return 120
+
+
 def create_model(model_name: str, settings: ModelSettings | None = None):
     resolved = merge_model_settings(settings, model_settings_from_env())
     provider = resolve_provider(resolved)
@@ -129,9 +133,13 @@ def create_openai_model(model_name: str, settings: ModelSettings):
         temperature=0,
         api_key=api_key or "dummy",
         base_url=base_url,
-        timeout=settings.request_timeout or 30,
+        timeout=effective_request_timeout(settings),
         max_retries=0,
     )
+
+
+def effective_request_timeout(settings: ModelSettings) -> float:
+    return settings.request_timeout or default_request_timeout()
 
 
 def normalize_openai_base_url(base_url: str | None) -> str | None:
@@ -294,7 +302,8 @@ def run_chat_session(
     resolved_settings = merge_model_settings(model_settings, model_settings_from_env())
     ui = ConsoleUI(debug_enabled=debug)
     ui.debug(
-        f"session_start model={model_name} provider={resolve_provider(resolved_settings)} project_dir={project_dir}"
+        f"session_start model={model_name} provider={resolve_provider(resolved_settings)} "
+        f"request_timeout={effective_request_timeout(resolved_settings)} project_dir={project_dir}"
     )
     runtime = AgentRuntime(
         workspace_root=root,

@@ -36,7 +36,10 @@ class ConsoleUI:
             print(colored(f"debug: {message}", "white"))
 
     def tool_call(self, name: str, args: dict[str, Any]) -> None:
-        payload = json.dumps(args, ensure_ascii=False, sort_keys=True)
+        if not self.debug_enabled:
+            print(f"{colored('tool', 'magenta')}: {name}")
+            return
+        payload = compact_json(args)
         print(f"{colored('tool', 'magenta')}: {name}({payload})")
 
     def agent_event(self, event_type: str, payload: dict[str, Any]) -> None:
@@ -258,6 +261,13 @@ def normalize_answer_payload(answer: str | dict[str, Any]) -> dict[str, Any]:
     if isinstance(answer, dict):
         return answer
     return {"answer": answer}
+
+
+def compact_json(value: Any, *, max_length: int = 500) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True)
+    if len(payload) <= max_length:
+        return payload
+    return payload[: max_length - 3] + "..."
 
 
 def parse_selection_indexes(raw_answer: str) -> list[int]:
