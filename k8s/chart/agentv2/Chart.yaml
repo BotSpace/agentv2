@@ -1,6 +1,0 @@
-apiVersion: v2
-name: agentv2
-description: Botmother Flow Agent v2 API
-type: application
-version: 0.1.0
-appVersion: "0.1.0"

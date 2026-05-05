@@ -1,0 +1,53 @@
+package app
+
+import (
+	"context"
+	"log"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+
+	"{{module_name}}/internal/config"
+	"{{module_name}}/internal/handlers"
+)
+
+type App struct {
+	bot     *tgbotapi.BotAPI
+	handler *handlers.Handler
+}
+
+func New(cfg config.Config) (*App, error) {
+	bot, err := tgbotapi.NewBotAPI(cfg.TelegramBotToken)
+	if err != nil {
+		return nil, err
+	}
+
+	return &App{
+		bot:     bot,
+		handler: handlers.New(),
+	}, nil
+}
+
+func (a *App) Run(ctx context.Context) error {
+	log.Printf("authorized on account %s", a.bot.Self.UserName)
+
+	updates := a.bot.GetUpdatesChan(tgbotapi.NewUpdate(0))
+	for {
+		select {
+		case <-ctx.Done():
+			a.bot.StopReceivingUpdates()
+			return nil
+		case update := <-updates:
+			if err := a.handleUpdate(update); err != nil {
+				log.Printf("handle update: %v", err)
+			}
+		}
+	}
+}
+
+func (a *App) handleUpdate(update tgbotapi.Update) error {
+	if update.Message == nil {
+		return nil
+	}
+
+	return a.handler.HandleMessage(a.bot, update.Message)
+}

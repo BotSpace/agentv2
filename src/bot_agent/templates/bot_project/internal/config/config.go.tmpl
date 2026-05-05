@@ -1,0 +1,26 @@
+package config
+
+import (
+	"errors"
+	"os"
+
+	"github.com/joho/godotenv"
+)
+
+type Config struct {
+	TelegramBotToken string
+}
+
+func Load() (Config, error) {
+	_ = godotenv.Load()
+
+	cfg := Config{
+		TelegramBotToken: os.Getenv("TELEGRAM_BOT_TOKEN"),
+	}
+
+	if cfg.TelegramBotToken == "" {
+		return Config{}, errors.New("TELEGRAM_BOT_TOKEN is not set")
+	}
+
+	return cfg, nil
+}

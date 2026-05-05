@@ -1,0 +1,19 @@
+# {{title_name}}
+
+Simple Telegram bot written in Go with a small production-friendly layout.
+
+## Structure
+
+- `cmd/bot` - application entrypoint
+- `internal/app` - bot wiring and update loop
+- `internal/config` - environment configuration
+- `internal/handlers` - Telegram message handlers
+- `pkg/messages` - template rendering helpers
+- `pkg/messages/templates` - message `.tmpl` files
+
+## Setup
+
+1. Copy `.env.example` to `.env`
+2. Fill in `TELEGRAM_BOT_TOKEN`
+3. Run `go mod tidy`
+4. Run `go run ./cmd/bot`

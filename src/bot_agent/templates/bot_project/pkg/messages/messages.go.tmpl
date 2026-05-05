@@ -1,0 +1,34 @@
+package messages
+
+import (
+	"bytes"
+	"embed"
+	"log"
+	"text/template"
+)
+
+//go:embed templates/*.tmpl
+var templateFiles embed.FS
+
+var templates = template.Must(template.ParseFS(templateFiles, "templates/*.tmpl"))
+
+func Start() string {
+	return render("start.tmpl", nil)
+}
+
+func Help() string {
+	return render("help.tmpl", nil)
+}
+
+func UnknownCommand() string {
+	return render("unknown_command.tmpl", nil)
+}
+
+func render(name string, data any) string {
+	var buffer bytes.Buffer
+	if err := templates.ExecuteTemplate(&buffer, name, data); err != nil {
+		log.Printf("render template %s: %v", name, err)
+		return ""
+	}
+	return buffer.String()
+}

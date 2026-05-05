@@ -20,5 +20,5 @@ USER app
 
 EXPOSE 8000
 
-ENTRYPOINT ["bm-agent"]
-CMD ["api", "--host", "0.0.0.0", "--port", "8000", "--flow", "data/flow.json"]
+ENTRYPOINT ["bot-agent"]
+CMD ["api", "--host", "0.0.0.0", "--port", "8000", "--project-dir", "data/generated-bot"]

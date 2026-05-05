@@ -3,9 +3,9 @@ requires = ["hatchling>=1.25.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "bm-flow-agent"
+name = "bot-agent"
 version = "0.1.0"
-description = "CLI flow authoring agent for Botmother Engine"
+description = "CLI and API agent that generates simple bot projects"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -14,8 +14,8 @@ dependencies = [
   "langchain>=0.3.7",
   "langchain-aws[anthropic]>=0.2.0",
   "langchain-ollama>=0.2.0",
+  "langchain-openai>=0.2.14",
   "pydantic>=2.9.2",
-  "PyYAML>=6.0.2",
   "typer>=0.12.5",
   "termcolor>=2.5.0",
   "fastapi>=0.115.0",
@@ -35,10 +35,10 @@ dev = [
 ]
 
 [project.scripts]
-bm-agent = "bm_flow_agent.cli:app"
+bot-agent = "bot_agent.cli:app"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/bm_flow_agent"]
+packages = ["src/bot_agent"]
 
 [tool.pytest.ini_options]
 pythonpath = [

@@ -1,0 +1,35 @@
+package handlers
+
+import (
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+
+	"{{module_name}}/pkg/messages"
+)
+
+type Handler struct{}
+
+func New() *Handler {
+	return &Handler{}
+}
+
+func (h *Handler) HandleMessage(bot *tgbotapi.BotAPI, message *tgbotapi.Message) error {
+	text := h.messageText(message)
+	msg := tgbotapi.NewMessage(message.Chat.ID, text)
+	_, err := bot.Send(msg)
+	return err
+}
+
+func (h *Handler) messageText(message *tgbotapi.Message) string {
+	if !message.IsCommand() {
+		return messages.UnknownCommand()
+	}
+
+	switch message.Command() {
+	case "start":
+		return messages.Start()
+	case "help":
+		return messages.Help()
+	default:
+		return messages.UnknownCommand()
+	}
+}

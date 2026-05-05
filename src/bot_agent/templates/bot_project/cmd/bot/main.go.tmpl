@@ -1,0 +1,30 @@
+package main
+
+import (
+	"context"
+	"log"
+	"os/signal"
+	"syscall"
+
+	"{{module_name}}/internal/app"
+	"{{module_name}}/internal/config"
+)
+
+func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("load config: %v", err)
+	}
+
+	application, err := app.New(cfg)
+	if err != nil {
+		log.Fatalf("create bot: %v", err)
+	}
+
+	if err := application.Run(ctx); err != nil {
+		log.Fatalf("bot stopped: %v", err)
+	}
+}
